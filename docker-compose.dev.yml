@@ -1,5 +1,3 @@
-version: '3.9'
-
 # Usage: docker compose -f docker-compose.dev.yml up
 #
 # Source directories are mounted as volumes so changes are picked up
