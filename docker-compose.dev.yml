@@ -1,0 +1,40 @@
+version: '3.9'
+
+# Usage: docker compose -f docker-compose.dev.yml up
+#
+# Source directories are mounted as volumes so changes are picked up
+# without rebuilding images.  The backend runs under nodemon.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: npx nodemon server.js
+    environment:
+      PORT: 3000
+      DB_PATH: /data/maosaobra.db
+      NODE_ENV: development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules          # keep container node_modules isolated
+      - sqlite_data:/data
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  sqlite_data:

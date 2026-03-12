@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checklist — Reforma Residencial</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      color: #1f2937;
+    }
+
+    #app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── loading / error ─────────────────────────────────────── */
+    #status-msg {
+      text-align: center;
+      padding: 48px 0;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    /* ── header card ─────────────────────────────────────────── */
+    .header-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      border-left: 4px solid #1e3a5f;
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+    }
+
+    .header-card h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #1e3a5f;
+      margin-bottom: 4px;
+    }
+
+    .header-subtitle {
+      font-size: 0.82rem;
+      color: #9ca3af;
+      margin-bottom: 24px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .pct-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 4px; }
+
+    .pct-value {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #1e3a5f;
+      line-height: 1;
+    }
+
+    .task-count { font-size: 0.82rem; color: #9ca3af; text-align: right; }
+
+    .progress-track {
+      width: 100%;
+      height: 14px;
+      background: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #1e3a5f, #3b82f6);
+      transition: width .5s ease;
+    }
+
+    .progress-fill.complete {
+      background: linear-gradient(90deg, #059669, #10b981);
+    }
+
+    .budget-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .budget-card {
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .budget-card .label { font-size: 0.72rem; color: #6b7280; margin-bottom: 3px; }
+    .budget-card .amount { font-size: 0.9rem; font-weight: 700; }
+
+    .budget-card.total   { background: #eff6ff; }
+    .budget-card.total   .amount { color: #1e40af; }
+    .budget-card.done    { background: #f0fdf4; }
+    .budget-card.done    .amount { color: #15803d; }
+    .budget-card.pending { background: #fff7ed; }
+    .budget-card.pending .amount { color: #c2410c; }
+
+    /* ── phase cards ─────────────────────────────────────────── */
+    .phases { display: flex; flex-direction: column; gap: 14px; }
+
+    .phase-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+
+    .phase-header {
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #fff;
+      text-align: left;
+    }
+
+    .phase-header.pacote-a { background: linear-gradient(90deg, #1e3a5f, #1d4ed8); }
+    .phase-header.pacote-b { background: linear-gradient(90deg, #115e59, #0f766e); }
+    .phase-header.extras   { background: linear-gradient(90deg, #9a3412, #ea580c); }
+
+    .phase-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+    .phase-meta  { font-size: 0.75rem; opacity: .8; margin-top: 2px; }
+
+    .phase-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .mini-track {
+      width: 80px;
+      height: 7px;
+      background: rgba(255,255,255,.25);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .mini-fill {
+      height: 100%;
+      background: #fff;
+      border-radius: 9999px;
+      transition: width .4s ease;
+    }
+
+    .phase-pct { font-size: 0.82rem; font-weight: 600; min-width: 36px; text-align: right; }
+
+    .chevron { flex-shrink: 0; }
+
+    /* ── item list ───────────────────────────────────────────── */
+    .item-list { list-style: none; }
+
+    .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 11px 20px;
+      cursor: pointer;
+      background: #fff;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background .15s;
+      user-select: none;
+    }
+
+    .item:last-child { border-bottom: none; }
+
+    .item.done-item { background: #f0fdf4; }
+
+    .item:active { background: #f9fafb; }
+
+    .item-icon { flex-shrink: 0; margin-top: 2px; }
+
+    .item-text {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      transition: color .15s;
+    }
+
+    .item.done-item .item-text {
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+
+    /* ── footer ──────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 28px;
+    }
+
+    @media (max-width: 480px) {
+      .header-card h1 { font-size: 1.35rem; }
+      .pct-value { font-size: 2.4rem; }
+      .budget-grid { gap: 6px; }
+      .budget-card .amount { font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <p id="status-msg">A carregar…</p>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ── SVG icons ────────────────────────────────────────────── */
+    const ICON_CHECK = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="12" fill="#22c55e"/>
+        <path d="M7 12.5l3.5 3.5 6.5-7" stroke="white" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    const ICON_CIRCLE = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10.5" stroke="#d1d5db" stroke-width="1.5"/>
+      </svg>`;
+
+    const ICON_UP = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2">
+        <path d="M18 15l-6-6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    const ICON_DOWN = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2">
+        <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    /* ── helpers ─────────────────────────────────────────────── */
+    const fmt = (v) =>
+      'R$\u00a0' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const CATEGORY_CLASS = {
+      'Pacote A — Mão de Obra Geral':       'pacote-a',
+      'Pacote B — Banheiros (Acabamentos)': 'pacote-b',
+      'Extras — Serviços Adicionais':       'extras',
+    };
+
+    /* ── state ───────────────────────────────────────────────── */
+    let project  = null;
+    let groups   = [];          // [{category, total_value, items:[{id,description,done,value}]}]
+    let collapsed = {};         // { category: bool }
+
+    /* ── API calls ───────────────────────────────────────────── */
+    async function loadData() {
+      const [projRes, svcRes] = await Promise.all([
+        fetch('/api/project'),
+        fetch('/api/services'),
+      ]);
+
+      if (!projRes.ok || !svcRes.ok) throw new Error('Falha ao carregar dados da API');
+
+      project = await projRes.json();
+      groups  = await svcRes.json();
+
+      groups.forEach(g => { collapsed[g.category] = false; });
+    }
+
+    async function toggleService(id, currentDone) {
+      const newDone = !currentDone;
+      const res = await fetch(`/api/services/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ done: newDone }),
+      });
+      if (!res.ok) throw new Error('Falha ao actualizar serviço');
+      const updated = await res.json();
+
+      // Update in-memory state
+      for (const g of groups) {
+        const item = g.items.find(i => i.id === updated.id);
+        if (item) { item.done = updated.done; break; }
+      }
+
+      render();
+    }
+
+    /* ── render ──────────────────────────────────────────────── */
+    function computeTotals() {
+      let totalItems = 0, doneItems = 0, totalValue = 0, doneValue = 0;
+      for (const g of groups) {
+        for (const item of g.items) {
+          totalItems++;
+          totalValue += item.value;
+          if (item.done) { doneItems++; doneValue += item.value; }
+        }
+      }
+      return { totalItems, doneItems, totalValue, doneValue };
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      const { totalItems, doneItems, totalValue, doneValue } = computeTotals();
+      const pct = totalItems ? Math.round(doneItems / totalItems * 100) : 0;
+
+      const headerHtml = `
+        <div class="header-card">
+          <h1>${escHtml(project.name)}</h1>
+          <p class="header-subtitle">${escHtml(project.address)} &nbsp;|&nbsp; ${escHtml(project.worker_name)}</p>
+
+          <div class="progress-row">
+            <div>
+              <p class="pct-label">Progresso Geral</p>
+              <span class="pct-value">${pct}%</span>
+            </div>
+            <p class="task-count">${doneItems} de ${totalItems} tarefas</p>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill ${pct === 100 ? 'complete' : ''}" style="width:${pct}%"></div>
+          </div>
+
+          <div class="budget-grid">
+            <div class="budget-card total">
+              <p class="label">Orçamento Total</p>
+              <p class="amount">${fmt(totalValue)}</p>
+            </div>
+            <div class="budget-card done">
+              <p class="label">Valor Concluído</p>
+              <p class="amount">${fmt(doneValue)}</p>
+            </div>
+            <div class="budget-card pending">
+              <p class="label">Valor Pendente</p>
+              <p class="amount">${fmt(totalValue - doneValue)}</p>
+            </div>
+          </div>
+        </div>`;
+
+      const phasesHtml = groups.map(g => {
+        const gDone  = g.items.filter(i => i.done).length;
+        const gTotal = g.items.length;
+        const gPct   = gTotal ? Math.round(gDone / gTotal * 100) : 0;
+        const cls    = CATEGORY_CLASS[g.category] || 'extras';
+        const open   = !collapsed[g.category];
+
+        const itemsHtml = open ? `
+          <ul class="item-list" id="list-${cls}">
+            ${g.items.map(item => `
+              <li class="item ${item.done ? 'done-item' : ''}"
+                  data-id="${item.id}" data-done="${item.done}">
+                <span class="item-icon">${item.done ? ICON_CHECK : ICON_CIRCLE}</span>
+                <span class="item-text">${escHtml(item.description)}</span>
+              </li>`).join('')}
+          </ul>` : '';
+
+        return `
+          <div class="phase-card">
+            <button class="phase-header ${cls}" data-cat="${escAttr(g.category)}">
+              <div>
+                <div class="phase-title">${escHtml(g.category)}</div>
+                <div class="phase-meta">${fmt(g.total_value)} &nbsp;·&nbsp; ${gDone}/${gTotal} concluído</div>
+              </div>
+              <div class="phase-right">
+                <div class="mini-track">
+                  <div class="mini-fill" style="width:${gPct}%"></div>
+                </div>
+                <span class="phase-pct">${gPct}%</span>
+                <span class="chevron">${open ? ICON_UP : ICON_DOWN}</span>
+              </div>
+            </button>
+            ${itemsHtml}
+          </div>`;
+      }).join('');
+
+      app.innerHTML = `
+        ${headerHtml}
+        <div class="phases">${phasesHtml}</div>
+        <p class="footer">Controle de Obra — maosaobra</p>`;
+
+      bindEvents();
+    }
+
+    function bindEvents() {
+      // Phase toggle
+      document.querySelectorAll('.phase-header').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cat = btn.dataset.cat;
+          collapsed[cat] = !collapsed[cat];
+          render();
+        });
+      });
+
+      // Item toggle
+      document.querySelectorAll('.item').forEach(li => {
+        li.addEventListener('click', () => {
+          const id   = parseInt(li.dataset.id, 10);
+          const done = li.dataset.done === 'true';
+          toggleService(id, done).catch(err => {
+            console.error(err);
+            alert('Erro ao actualizar o serviço. Tente novamente.');
+          });
+        });
+      });
+    }
+
+    /* ── XSS-safe escaping ───────────────────────────────────── */
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escAttr(str) {
+      return escHtml(str).replace(/'/g, '&#x27;');
+    }
+
+    /* ── boot ────────────────────────────────────────────────── */
+    loadData()
+      .then(render)
+      .catch(err => {
+        document.getElementById('app').innerHTML =
+          `<p id="status-msg" style="color:#ef4444">Erro ao carregar: ${escHtml(err.message)}</p>`;
+      });
+  </script>
+</body>
+</html>
