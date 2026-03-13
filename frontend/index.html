@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checklist — Reforma Residencial</title>
+  <title>Mãos à Obra</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,21 +14,162 @@
       color: #1f2937;
     }
 
+    /* ── Top bar ─────────────────────────────────────────────────────────── */
+    #topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #1e3a5f;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+
+    #topbar-brand {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #topbar-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255,255,255,.85);
+    }
+
+    #avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      border: 2px solid rgba(255,255,255,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    #btn-signout {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.25);
+      color: rgba(255,255,255,.85);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    #btn-signout:hover { background: rgba(255,255,255,.22); }
+
+    /* ── App container ───────────────────────────────────────────────────── */
     #app {
       max-width: 720px;
       margin: 0 auto;
-      padding: 24px 16px 48px;
+      padding: 28px 16px 56px;
     }
 
-    /* ── loading / error ─────────────────────────────────────── */
-    #status-msg {
+    /* ── Loading / error ─────────────────────────────────────────────────── */
+    .status-msg {
       text-align: center;
-      padding: 48px 0;
+      padding: 64px 0;
       color: #6b7280;
       font-size: 0.95rem;
     }
 
-    /* ── header card ─────────────────────────────────────────── */
+    .status-msg.error { color: #ef4444; }
+
+    /* ── Dashboard ───────────────────────────────────────────────────────── */
+    .dash-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #1e3a5f;
+      margin-bottom: 20px;
+    }
+
+    .project-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .project-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      border-left: 4px solid #1e3a5f;
+      padding: 20px 22px;
+      cursor: pointer;
+      transition: box-shadow .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .project-card:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,.12);
+      transform: translateY(-1px);
+    }
+
+    .project-card-info h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 4px;
+    }
+
+    .project-card-info p {
+      font-size: 0.82rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .project-card-arrow {
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 56px 0;
+      color: #9ca3af;
+    }
+
+    .empty-state p { font-size: 0.95rem; }
+
+    /* ── Project view ─────────────────────────────────────────────────────── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e3a5f;
+      cursor: pointer;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
     .header-card {
       background: #fff;
       border-radius: 16px;
@@ -111,7 +252,7 @@
     .budget-card.pending { background: #fff7ed; }
     .budget-card.pending .amount { color: #c2410c; }
 
-    /* ── phase cards ─────────────────────────────────────────── */
+    /* ── Phase cards ──────────────────────────────────────────────────────── */
     .phases { display: flex; flex-direction: column; gap: 14px; }
 
     .phase-card {
@@ -164,10 +305,9 @@
     }
 
     .phase-pct { font-size: 0.82rem; font-weight: 600; min-width: 36px; text-align: right; }
+    .chevron   { flex-shrink: 0; }
 
-    .chevron { flex-shrink: 0; }
-
-    /* ── item list ───────────────────────────────────────────── */
+    /* ── Item list ────────────────────────────────────────────────────────── */
     .item-list { list-style: none; }
 
     .item {
@@ -182,13 +322,10 @@
       user-select: none;
     }
 
-    .item:last-child { border-bottom: none; }
-
-    .item.done-item { background: #f0fdf4; }
-
-    .item:active { background: #f9fafb; }
-
-    .item-icon { flex-shrink: 0; margin-top: 2px; }
+    .item:last-child  { border-bottom: none; }
+    .item.done-item   { background: #f0fdf4; }
+    .item:active      { background: #f9fafb; }
+    .item-icon        { flex-shrink: 0; margin-top: 2px; }
 
     .item-text {
       font-size: 0.92rem;
@@ -201,7 +338,7 @@
       text-decoration: line-through;
     }
 
-    /* ── footer ──────────────────────────────────────────────── */
+    /* ── Footer ───────────────────────────────────────────────────────────── */
     .footer {
       text-align: center;
       font-size: 0.75rem;
@@ -214,18 +351,30 @@
       .pct-value { font-size: 2.4rem; }
       .budget-grid { gap: 6px; }
       .budget-card .amount { font-size: 0.78rem; }
+      #topbar-name { display: none; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Top bar (hidden until auth confirmed) -->
+  <div id="topbar" style="display:none">
+    <div id="topbar-brand">Mãos à Obra</div>
+    <div id="topbar-right">
+      <div id="avatar"></div>
+      <span id="topbar-name"></span>
+      <button id="btn-signout">Sair</button>
+    </div>
+  </div>
+
   <div id="app">
-    <p id="status-msg">A carregar…</p>
+    <p class="status-msg">A carregar…</p>
   </div>
 
   <script>
     'use strict';
 
-    /* ── SVG icons ────────────────────────────────────────────── */
+    /* ── SVG icons ────────────────────────────────────────────────────────── */
     const ICON_CHECK = `
       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="12" fill="#22c55e"/>
@@ -250,9 +399,29 @@
         <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>`;
 
-    /* ── helpers ─────────────────────────────────────────────── */
+    const ICON_ARROW_RIGHT = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    const ICON_ARROW_LEFT = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    /* ── Helpers ─────────────────────────────────────────────────────────── */
     const fmt = (v) =>
       'R$\u00a0' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escAttr(str) { return escHtml(str).replace(/'/g, '&#x27;'); }
 
     const CATEGORY_CLASS = {
       'Pacote A — Mão de Obra Geral':       'pacote-a',
@@ -260,49 +429,141 @@
       'Extras — Serviços Adicionais':       'extras',
     };
 
-    /* ── state ───────────────────────────────────────────────── */
-    let project  = null;
-    let groups   = [];          // [{category, total_value, items:[{id,description,done,value}]}]
-    let collapsed = {};         // { category: bool }
-
-    /* ── API calls ───────────────────────────────────────────── */
-    async function loadData() {
-      const [projRes, svcRes] = await Promise.all([
-        fetch('/api/project'),
-        fetch('/api/services'),
-      ]);
-
-      if (!projRes.ok || !svcRes.ok) throw new Error('Falha ao carregar dados da API');
-
-      project = await projRes.json();
-      groups  = await svcRes.json();
-
-      groups.forEach(g => { collapsed[g.category] = false; });
+    /* ── Auth ────────────────────────────────────────────────────────────── */
+    function getToken() { return localStorage.getItem('mao_token'); }
+    function getUser()  {
+      try { return JSON.parse(localStorage.getItem('mao_user')); } catch { return null; }
     }
 
-    async function toggleService(id, currentDone) {
-      const newDone = !currentDone;
-      const res = await fetch(`/api/services/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ done: newDone }),
-      });
-      if (!res.ok) throw new Error('Falha ao actualizar serviço');
-      const updated = await res.json();
+    function signOut() {
+      localStorage.removeItem('mao_token');
+      localStorage.removeItem('mao_user');
+      window.location.replace('/signin');
+    }
 
-      // Update in-memory state
-      for (const g of groups) {
-        const item = g.items.find(i => i.id === updated.id);
-        if (item) { item.done = updated.done; break; }
+    async function apiFetch(url, options = {}) {
+      const token = getToken();
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      if (res.status === 401) {
+        signOut();
+        return null;
+      }
+      return res;
+    }
+
+    /* ── Router ──────────────────────────────────────────────────────────── */
+    function navigate(path) {
+      window.history.pushState({}, '', path);
+      route();
+    }
+
+    function route() {
+      const path = window.location.pathname;
+      const projectMatch = path.match(/^\/project\/(\d+)$/);
+      if (projectMatch) {
+        renderProject(parseInt(projectMatch[1], 10));
+      } else if (path === '/dashboard' || path === '/') {
+        renderDashboard();
+      } else {
+        navigate('/dashboard');
+      }
+    }
+
+    window.addEventListener('popstate', route);
+
+    /* ── Top bar ─────────────────────────────────────────────────────────── */
+    function initTopBar(user) {
+      const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+      document.getElementById('avatar').textContent = initial;
+      document.getElementById('topbar-name').textContent = user.name;
+      document.getElementById('topbar').style.display = 'flex';
+      document.getElementById('topbar-brand').addEventListener('click', () => navigate('/dashboard'));
+      document.getElementById('btn-signout').addEventListener('click', signOut);
+    }
+
+    /* ── Dashboard view ──────────────────────────────────────────────────── */
+    async function renderDashboard() {
+      document.title = 'Dashboard — Mãos à Obra';
+      const app = document.getElementById('app');
+      app.innerHTML = '<p class="status-msg">A carregar projetos…</p>';
+
+      const res = await apiFetch('/api/projects');
+      if (!res) return;
+
+      if (!res.ok) {
+        app.innerHTML = '<p class="status-msg error">Erro ao carregar projetos.</p>';
+        return;
       }
 
-      render();
+      const projects = await res.json();
+
+      if (projects.length === 0) {
+        app.innerHTML = `
+          <p class="dash-title">Meus Projetos</p>
+          <div class="empty-state"><p>Nenhum projeto encontrado.</p></div>`;
+        return;
+      }
+
+      const cardsHtml = projects.map(p => `
+        <div class="project-card" data-id="${p.id}">
+          <div class="project-card-info">
+            <h2>${escHtml(p.name)}</h2>
+            <p>${escHtml(p.address || '')}${p.address && p.worker_name ? ' &nbsp;·&nbsp; ' : ''}${escHtml(p.worker_name || '')}</p>
+          </div>
+          <span class="project-card-arrow">${ICON_ARROW_RIGHT}</span>
+        </div>`).join('');
+
+      app.innerHTML = `
+        <p class="dash-title">Meus Projetos</p>
+        <div class="project-grid">${cardsHtml}</div>`;
+
+      app.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', () => {
+          navigate(`/project/${card.dataset.id}`);
+        });
+      });
     }
 
-    /* ── render ──────────────────────────────────────────────── */
+    /* ── Project view ────────────────────────────────────────────────────── */
+    let projectState  = null;  // current project object
+    let groupsState   = [];    // [{category, total_value, items}]
+    let collapsed     = {};    // { category: bool }
+
+    async function renderProject(id) {
+      document.title = 'Projeto — Mãos à Obra';
+      const app = document.getElementById('app');
+      app.innerHTML = '<p class="status-msg">A carregar…</p>';
+
+      const [projRes, svcRes] = await Promise.all([
+        apiFetch(`/api/projects/${id}`),
+        apiFetch(`/api/projects/${id}/services`),
+      ]);
+
+      if (!projRes || !svcRes) return; // 401 handled — redirect in flight
+
+      if (!projRes.ok || !svcRes.ok) {
+        app.innerHTML = '<p class="status-msg error">Projeto não encontrado.</p>';
+        return;
+      }
+
+      projectState = await projRes.json();
+      groupsState  = await svcRes.json();
+      groupsState.forEach(g => { collapsed[g.category] = false; });
+
+      document.title = `${projectState.name} — Mãos à Obra`;
+      paintProject();
+    }
+
     function computeTotals() {
       let totalItems = 0, doneItems = 0, totalValue = 0, doneValue = 0;
-      for (const g of groups) {
+      for (const g of groupsState) {
         for (const item of g.items) {
           totalItems++;
           totalValue += item.value;
@@ -312,15 +573,16 @@
       return { totalItems, doneItems, totalValue, doneValue };
     }
 
-    function render() {
+    function paintProject() {
       const app = document.getElementById('app');
       const { totalItems, doneItems, totalValue, doneValue } = computeTotals();
       const pct = totalItems ? Math.round(doneItems / totalItems * 100) : 0;
 
       const headerHtml = `
+        <span class="back-link" id="back-btn">${ICON_ARROW_LEFT} Projetos</span>
         <div class="header-card">
-          <h1>${escHtml(project.name)}</h1>
-          <p class="header-subtitle">${escHtml(project.address)} &nbsp;|&nbsp; ${escHtml(project.worker_name)}</p>
+          <h1>${escHtml(projectState.name)}</h1>
+          <p class="header-subtitle">${escHtml(projectState.address || '')}${projectState.address && projectState.worker_name ? ' &nbsp;|&nbsp; ' : ''}${escHtml(projectState.worker_name || '')}</p>
 
           <div class="progress-row">
             <div>
@@ -350,7 +612,7 @@
           </div>
         </div>`;
 
-      const phasesHtml = groups.map(g => {
+      const phasesHtml = groupsState.map(g => {
         const gDone  = g.items.filter(i => i.done).length;
         const gTotal = g.items.length;
         const gPct   = gTotal ? Math.round(gDone / gTotal * 100) : 0;
@@ -358,7 +620,7 @@
         const open   = !collapsed[g.category];
 
         const itemsHtml = open ? `
-          <ul class="item-list" id="list-${cls}">
+          <ul class="item-list">
             ${g.items.map(item => `
               <li class="item ${item.done ? 'done-item' : ''}"
                   data-id="${item.id}" data-done="${item.done}">
@@ -391,21 +653,19 @@
         <div class="phases">${phasesHtml}</div>
         <p class="footer">Controle de Obra — maosaobra</p>`;
 
-      bindEvents();
-    }
+      // Back button
+      document.getElementById('back-btn').addEventListener('click', () => navigate('/dashboard'));
 
-    function bindEvents() {
-      // Phase toggle
-      document.querySelectorAll('.phase-header').forEach(btn => {
+      // Phase toggles
+      app.querySelectorAll('.phase-header').forEach(btn => {
         btn.addEventListener('click', () => {
-          const cat = btn.dataset.cat;
-          collapsed[cat] = !collapsed[cat];
-          render();
+          collapsed[btn.dataset.cat] = !collapsed[btn.dataset.cat];
+          paintProject();
         });
       });
 
-      // Item toggle
-      document.querySelectorAll('.item').forEach(li => {
+      // Item toggles
+      app.querySelectorAll('.item').forEach(li => {
         li.addEventListener('click', () => {
           const id   = parseInt(li.dataset.id, 10);
           const done = li.dataset.done === 'true';
@@ -417,26 +677,42 @@
       });
     }
 
-    /* ── XSS-safe escaping ───────────────────────────────────── */
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    function escAttr(str) {
-      return escHtml(str).replace(/'/g, '&#x27;');
-    }
-
-    /* ── boot ────────────────────────────────────────────────── */
-    loadData()
-      .then(render)
-      .catch(err => {
-        document.getElementById('app').innerHTML =
-          `<p id="status-msg" style="color:#ef4444">Erro ao carregar: ${escHtml(err.message)}</p>`;
+    async function toggleService(id, currentDone) {
+      const res = await apiFetch(`/api/services/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ done: !currentDone }),
       });
+      if (!res) return;
+      if (!res.ok) throw new Error('Falha ao actualizar serviço');
+      const updated = await res.json();
+
+      for (const g of groupsState) {
+        const item = g.items.find(i => i.id === updated.id);
+        if (item) { item.done = updated.done; break; }
+      }
+
+      paintProject();
+    }
+
+    /* ── Boot ────────────────────────────────────────────────────────────── */
+    (function boot() {
+      const token = getToken();
+      const user  = getUser();
+
+      if (!token || !user) {
+        window.location.replace('/signin');
+        return;
+      }
+
+      initTopBar(user);
+
+      // Redirect bare root to /dashboard
+      if (window.location.pathname === '/') {
+        window.history.replaceState({}, '', '/dashboard');
+      }
+
+      route();
+    })();
   </script>
 </body>
 </html>

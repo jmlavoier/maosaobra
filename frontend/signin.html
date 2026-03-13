@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar — Mãos à Obra</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1f2937;
+      padding: 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      border-top: 4px solid #1e3a5f;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .brand {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e3a5f;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #1f2937;
+      background: #f9fafb;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #1e3a5f;
+      box-shadow: 0 0 0 3px rgba(30,58,95,.12);
+      background: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(90deg, #1e3a5f, #1d4ed8);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .15s;
+    }
+
+    .btn:hover { opacity: .88; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    .error-msg {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .footer-link {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .footer-link a {
+      color: #1e3a5f;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .footer-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="brand">Mãos à Obra</p>
+    <h1>Entrar</h1>
+    <div class="error-msg" id="error-msg"></div>
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" placeholder="voce@email.com" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="password">Senha</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <button class="btn" type="submit" id="btn">Entrar</button>
+    </form>
+    <p class="footer-link">Não tem conta? <a href="/signup">Criar conta</a></p>
+  </div>
+
+  <script>
+    'use strict';
+
+    // If already authenticated, go straight to dashboard
+    if (localStorage.getItem('mao_token')) {
+      window.location.replace('/dashboard');
+    }
+
+    const form   = document.getElementById('form');
+    const btn    = document.getElementById('btn');
+    const errBox = document.getElementById('error-msg');
+
+    function showError(msg) {
+      errBox.textContent = msg;
+      errBox.style.display = 'block';
+    }
+
+    function hideError() {
+      errBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showError('Preencha e-mail e senha.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'A entrar…';
+
+      try {
+        const res = await fetch('/api/auth/signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Erro ao entrar. Tente novamente.');
+          return;
+        }
+
+        localStorage.setItem('mao_token', data.token);
+        localStorage.setItem('mao_user', JSON.stringify(data.user));
+        window.location.replace('/dashboard');
+      } catch {
+        showError('Não foi possível ligar ao servidor. Tente novamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      }
+    });
+  </script>
+</body>
+</html>
