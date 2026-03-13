@@ -10,7 +10,17 @@ if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
 const db = new Database(DB_PATH);
 
+// ── Core tables ────────────────────────────────────────────────────────────
+
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY,
+    name          TEXT NOT NULL,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at    INTEGER DEFAULT (unixepoch())
+  );
+
   CREATE TABLE IF NOT EXISTS projects (
     id          INTEGER PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -27,6 +37,15 @@ db.exec(`
     value       REAL    DEFAULT 0
   );
 `);
+
+// ── Migration: add user_id to projects if missing ─────────────────────────
+
+const projectsCols = db.pragma('table_info(projects)').map(c => c.name);
+if (!projectsCols.includes('user_id')) {
+  db.exec('ALTER TABLE projects ADD COLUMN user_id INTEGER REFERENCES users(id)');
+}
+
+// ── Seed ───────────────────────────────────────────────────────────────────
 
 const { c } = db.prepare('SELECT COUNT(*) AS c FROM projects').get();
 if (c === 0) {
