@@ -1,10 +1,21 @@
 'use strict';
 const db = require('../db/init');
 
-function handleGetAll(req, res) {
+function handleGetAll(req, res, projectId) {
+  // Verify the project belongs to the authenticated user
+  const project = db.prepare(
+    'SELECT id FROM projects WHERE id = ? AND user_id = ?'
+  ).get(projectId, req.user.userId);
+
+  if (!project) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Project not found' }));
+    return;
+  }
+
   const rows = db.prepare(
-    'SELECT id, description, category, done, value FROM services WHERE project_id = 1 ORDER BY id'
-  ).all();
+    'SELECT id, description, category, done, value FROM services WHERE project_id = ? ORDER BY id'
+  ).all(projectId);
 
   // Group by category preserving insertion order
   const map = new Map();
@@ -40,19 +51,24 @@ function handlePatch(req, res, id) {
     return;
   }
 
-  const result = db
-    .prepare('UPDATE services SET done = ? WHERE id = ?')
-    .run(done ? 1 : 0, id);
+  // Verify the service belongs to a project owned by the authenticated user
+  const owned = db.prepare(
+    `SELECT s.id FROM services s
+     JOIN projects p ON p.id = s.project_id
+     WHERE s.id = ? AND p.user_id = ?`
+  ).get(id, req.user.userId);
 
-  if (result.changes === 0) {
+  if (!owned) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Service not found' }));
     return;
   }
 
-  const service = db
-    .prepare('SELECT id, description, category, done, value FROM services WHERE id = ?')
-    .get(id);
+  db.prepare('UPDATE services SET done = ? WHERE id = ?').run(done ? 1 : 0, id);
+
+  const service = db.prepare(
+    'SELECT id, description, category, done, value FROM services WHERE id = ?'
+  ).get(id);
 
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ ...service, done: service.done === 1 }));
