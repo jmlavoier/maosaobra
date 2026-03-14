@@ -5,7 +5,7 @@ services:
     environment:
       PORT: 3000
       DB_PATH: /data/maosaobra.db
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET env var is required in production}
     volumes:
       - sqlite_data:/data
     expose:
