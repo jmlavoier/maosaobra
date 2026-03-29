@@ -35,12 +35,16 @@ jobs:
           tags: jmlavoier/maosaobra-frontend:latest
 
       - name: Deploy to droplet
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: root
-          key: ${{ secrets.DROPLET_SSH_KEY }}
-          script: |
+        env:
+          SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/id_rsa root@"$DROPLET_HOST" << 'ENDSSH'
             docker pull jmlavoier/maosaobra-backend:latest
             docker pull jmlavoier/maosaobra-frontend:latest
 
@@ -66,3 +70,4 @@ jobs:
               --restart unless-stopped \
               -p 80:80 \
               jmlavoier/maosaobra-frontend:latest
+          ENDSSH
