@@ -40,11 +40,11 @@ jobs:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts
 
-          ssh -i ~/.ssh/id_rsa root@"$DROPLET_HOST" << 'ENDSSH'
+          ssh -i ~/.ssh/id_rsa root@"$DROPLET_HOST" 'bash -s' << 'ENDSSH'
             docker pull jmlavoier/maosaobra-backend:latest
             docker pull jmlavoier/maosaobra-frontend:latest
 
