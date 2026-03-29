@@ -1,0 +1,67 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: jmlavoier/maosaobra-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: jmlavoier/maosaobra-frontend:latest
+
+      - name: Deploy to droplet
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            docker pull jmlavoier/maosaobra-backend:latest
+            docker pull jmlavoier/maosaobra-frontend:latest
+
+            docker stop maosaobra-frontend || true
+            docker rm   maosaobra-frontend || true
+            docker stop maosaobra-backend  || true
+            docker rm   maosaobra-backend  || true
+
+            docker network create maosaobra-net || true
+            docker volume  create sqlite_data   || true
+
+            docker run -d \
+              --name maosaobra-backend \
+              --network maosaobra-net \
+              --network-alias backend \
+              --restart unless-stopped \
+              -v sqlite_data:/data \
+              jmlavoier/maosaobra-backend:latest
+
+            docker run -d \
+              --name maosaobra-frontend \
+              --network maosaobra-net \
+              --restart unless-stopped \
+              -p 80:80 \
+              jmlavoier/maosaobra-frontend:latest
