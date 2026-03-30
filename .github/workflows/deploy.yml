@@ -35,39 +35,34 @@ jobs:
           tags: jmlavoier/maosaobra-frontend:latest
 
       - name: Deploy to droplet
-        env:
-          SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
-          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.DROPLET_HOST}}
+          username: ${{secrets.DROPLET_USERNAME}}
+          key: ${{secrets.DROPLET_SSH_KEY}}
+          script: |
+              docker pull jmlavoier/maosaobra-backend:latest
+              docker pull jmlavoier/maosaobra-frontend:latest
 
-          ssh -i ~/.ssh/id_rsa root@"$DROPLET_HOST" 'bash -s' << 'ENDSSH'
-            docker pull jmlavoier/maosaobra-backend:latest
-            docker pull jmlavoier/maosaobra-frontend:latest
+              docker stop maosaobra-frontend || true
+              docker rm   maosaobra-frontend || true
+              docker stop maosaobra-backend  || true
+              docker rm   maosaobra-backend  || true
 
-            docker stop maosaobra-frontend || true
-            docker rm   maosaobra-frontend || true
-            docker stop maosaobra-backend  || true
-            docker rm   maosaobra-backend  || true
+              docker network create maosaobra-net || true
+              docker volume  create sqlite_data   || true
 
-            docker network create maosaobra-net || true
-            docker volume  create sqlite_data   || true
+              docker run -d \
+                --name maosaobra-backend \
+                --network maosaobra-net \
+                --network-alias backend \
+                --restart unless-stopped \
+                -v sqlite_data:/data \
+                jmlavoier/maosaobra-backend:latest
 
-            docker run -d \
-              --name maosaobra-backend \
-              --network maosaobra-net \
-              --network-alias backend \
-              --restart unless-stopped \
-              -v sqlite_data:/data \
-              jmlavoier/maosaobra-backend:latest
-
-            docker run -d \
-              --name maosaobra-frontend \
-              --network maosaobra-net \
-              --restart unless-stopped \
-              -p 80:80 \
-              jmlavoier/maosaobra-frontend:latest
-          ENDSSH
+              docker run -d \
+                --name maosaobra-frontend \
+                --network maosaobra-net \
+                --restart unless-stopped \
+                -p 80:80 \
+                jmlavoier/maosaobra-frontend:latest
